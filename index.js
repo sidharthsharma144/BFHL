@@ -8,24 +8,26 @@ const userId = `${fullName}_${dob}`;
 const email = "sidharthsharma17240@gmail.com";
 const rollNumber = "2210992379";
 
-function isNumber(str) {
-    return /^[0-9]+$/.test(str);
-}
+const patterns = {
+    number: /^[0-9]+$/,
+    alpha: /^[a-zA-Z]+$/,
+    special: /^[^a-zA-Z0-9]+$/
+};
 
-function isAlpha(str) {
-    return /^[a-zA-Z]+$/.test(str);
-}
+const checkType = (str) => {
+    if (patterns.number.test(str)) return "number";
+    if (patterns.alpha.test(str)) return "alpha";
+    if (patterns.special.test(str)) return "special";
+    return "unknown";
+};
 
-function isSpecialChar(str) {
-    return /^[^a-zA-Z0-9]+$/.test(str);
-}
-
-function alternatingCapsReverseConcat(alphas) {
-    const combined = alphas.join("").split("").reverse();
-    return combined.map((ch, i) =>
-        i % 2 === 0 ? ch.toUpperCase() : ch.toLowerCase()
-    ).join("");
-}
+const alternatingCapsReverseConcat = (alphas) =>
+    alphas
+        .join("")
+        .split("")
+        .reverse()
+        .map((ch, i) => (i % 2 === 0 ? ch.toUpperCase() : ch.toLowerCase()))
+        .join("");
 
 app.post("/bfhl", (req, res) => {
     try {
@@ -41,32 +43,33 @@ app.post("/bfhl", (req, res) => {
         const specialChars = [];
         let sum = 0;
 
-        for (let item of inputData) {
-            if (isNumber(item)) {
-                const num = parseInt(item);
-                sum += num;
-                if (num % 2 === 0) {
-                    evenNumbers.push(item);
-                } else {
-                    oddNumbers.push(item);
-                }
-            } else if (isAlpha(item)) {
-                alphabets.push(item.toUpperCase());
-            } else if (isSpecialChar(item)) {
-                specialChars.push(item);
+        inputData.forEach(item => {
+            const type = checkType(item);
+            switch (type) {
+                case "number":
+                    const num = parseInt(item, 10);
+                    sum += num;
+                    (num % 2 === 0 ? evenNumbers : oddNumbers).push(item);
+                    break;
+                case "alpha":
+                    alphabets.push(item.toUpperCase());
+                    break;
+                case "special":
+                    specialChars.push(item);
+                    break;
             }
-        }
+        });
 
         const concatString = alternatingCapsReverseConcat(alphabets);
 
         return res.status(200).json({
             is_success: true,
             user_id: userId,
-            email: email,
+            email,
             roll_number: rollNumber,
             odd_numbers: oddNumbers,
             even_numbers: evenNumbers,
-            alphabets: alphabets,
+            alphabets,
             special_characters: specialChars,
             sum: sum.toString(),
             concat_string: concatString
